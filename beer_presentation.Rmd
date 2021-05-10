@@ -32,7 +32,6 @@ library(e1071)
 library(kableExtra)
 library(bookdown)
 
-setwd('C:/Users/rvolk/Desktop/DSCI 320/Project')
 source('beersvm.R')
 ```
 

@@ -1,8 +1,6 @@
 library(tidyverse)
 library(e1071)
 
-setwd('C:/Users/rvolk/Desktop/DSCI 320/Project')
-
 beer <- read_csv('beers.csv')
 beer <- beer[,-1]
 beer <- beer %>% filter(!is.na(ibu))

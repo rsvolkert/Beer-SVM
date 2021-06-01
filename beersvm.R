@@ -48,8 +48,30 @@ pa <- beer %>%
   filter(style=='IPA' | style=='APA' | style=='Pale Ale')
 pa$style <- factor(pa$style)
 
-svm_pa <- svm(style ~ abv + ibu, pa, kernel = 'linear', type = 'C-classification', cost=10)
-pred_pa <- predict(svm_pa)
+ggplot(pa, aes(abv, ibu, color=style)) +
+  geom_point()
+
+pa_train <- seq_len(nrow(pa)) %in% sample(seq_len(nrow(pa)), round(0.6*nrow(pa)))
+pa_test <- !pa_train
+
+pa_linear <- tune(svm, style ~ abv + ibu, data=pa[pa_train,], scale=FALSE, kernel = 'linear', ranges=list(cost = seq(0.1, 10, by=0.1)))
+pa_radial <- tune(svm , style ~ abv + ibu, data=pa[pa_train,], gamma=1, scale=FALSE, kernel='radial', ranges=list(cost = seq(0.1, 10, by=0.1)))
+
+pa_lin_best <- pa_linear$best.model
+pa_rad_best <- pa_radial$best.model
+
+pred_grid <- expand.grid(abv = seq(min(pa$abv), max(pa$abv), length.out=500),
+                         ibu = seq(min(pa$ibu), max(pa$ibu), length.out=500)) %>%
+  mutate(linear = predict(pa_lin_best, ., type='class'),
+         radial = predict(pa_rad_best, ., type='class'))
+
+pred_grid %>%
+  gather(model, prediction, -abv, -ibu) %>%
+  ggplot() +
+  geom_tile(aes(abv, ibu, fill=prediction), alpha=0.5) +
+  geom_point(aes(abv, ibu, color=style), data=pa[pa_train,]) +
+  facet_grid(.~model)
+
 
 lp <- beer %>%
   filter(style=='Lager' | style=='Porter')
